@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Rhythm RO · Technician</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { 
+            --rhythm-blue: #0077b6;
+            --rhythm-light-bg: #f0f4f8;
+            --status-open: #0ea5e9;
+            --status-process: #f59e0b;
+            --status-closed: #10b981;
+        }
+
+        body { 
+            background-color: var(--rhythm-light-bg);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            padding-bottom: 30px;
+        }
+
+        /* ----- pointer cursor for anything clickable ----- */
+        .cursor-pointer,
+        [onclick],
+        .btn,
+        .job-card,
+        .accordion-button,
+        i[onclick],
+        a[href],
+        button:not(:disabled) {
+            cursor: pointer !important;
+        }
+
+        /* ----- hover effect for all buttons ----- */
+        .btn {
+            transition: filter 0.2s ease, box-shadow 0.15s ease;
+        }
+        .btn:hover {
+            filter: brightness(0.95);
+        }
+        .btn:active {
+            filter: brightness(0.9);
+        }
+        .btn-outline-primary:hover,
+        .btn-outline-success:hover,
+        .btn-outline-light:hover {
+            filter: brightness(0.95);
+        }
+
+        /* focus states (visible) */
+        .btn:focus, .form-control:focus, .accordion-button:focus, .job-card:focus {
+            box-shadow: 0 0 0 0.25rem rgba(0, 119, 182, 0.4) !important;
+            outline: none;
+        }
+
+        /* job cards */
+        .job-card {
+            background: white; border-radius: 18px; padding: 15px;
+            margin-bottom: 15px; border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .job-card:hover { 
+            border-color: var(--rhythm-blue);
+            background-color: #fafdff;
+        }
+        .job-card:focus-visible {
+            box-shadow: 0 0 0 3px rgba(0,119,182,0.3);
+            border-color: var(--rhythm-blue);
+        }
+
+        .tech-header {
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            margin-bottom: 20px;
+        }
+
+        .status-pill {
+            font-size: 11px; font-weight: 700;
+            padding: 4px 12px; border-radius: 50px; text-transform: uppercase;
+        }
+
+        .status-open { background: #e0f2fe; color: var(--status-open); }
+        .status-process { background: #ffedd5; color: var(--status-process); }
+        .status-closed { background: #dcfce7; color: var(--status-closed); }
+
+        .type-indicator { width: 4px; height: 40px; border-radius: 10px; margin-right: 12px; }
+
+        .btn-rhythm {
+            background: var(--rhythm-blue); color: white;
+            border-radius: 12px; font-weight: 600; padding: 12px;
+        }
+        .btn-rhythm:hover {
+            background: #00669e;
+            filter: none;
+        }
+
+        /* modals centered */
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+
+        .hidden { display: none !important; }
+        .spare-row { background: #f8fafc; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+        
+        .qr-placeholder {
+            width: 150px; height: 150px; background: #eee;
+            margin: 0 auto; display: flex; align-items: center;
+            justify-content: center; border: 2px dashed #ccc;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #f1f9ff;
+        }
+
+        .profile-edit-icon {
+            font-size: 1rem;
+            margin-left: 8px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .profile-edit-icon:hover {
+            opacity: 1;
+            color: #a0d4ff;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== ALERT MODAL ===== -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 p-3 text-center">
+            <div class="modal-body">
+                <i class="bi bi-info-circle text-primary fs-1 mb-3"></i>
+                <h5 class="fw-bold" id="alertTitle">Notice</h5>
+                <p id="alertMessage" class="text-muted">message</p>
+                <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROFILE EDIT MODAL -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 p-3">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Full Name</label>
+                    <input type="text" class="form-control" id="profileName" placeholder="Your name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Phone Number</label>
+                    <input type="tel" class="form-control" id="profilePhone" placeholder="Phone">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Address</label>
+                    <input type="text" class="form-control" id="profileAddress" placeholder="Address">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM BILL MODAL (before sending) -->
+<div class="modal fade" id="confirmBillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 p-3 text-center">
+            <div class="modal-body">
+                <i class="bi bi-receipt text-warning fs-1 mb-3"></i>
+                <h5 class="fw-bold">Send Bill to Customer?</h5>
+                <p class="text-muted">The bill will be sent and you'll proceed to payment.</p>
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-light w-50 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary w-50 rounded-pill" onclick="proceedToPaymentConfirmed()" data-bs-dismiss="modal">Yes, Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM PAYMENT MODAL (for both QR and Cash) -->
+<div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 p-3 text-center">
+            <div class="modal-body">
+                <i class="bi bi-question-circle text-warning fs-1 mb-3"></i>
+                <h5 class="fw-bold" id="confirmPaymentTitle">Confirm Payment</h5>
+                <p class="text-muted" id="confirmPaymentMessage">Are you sure you want to mark this payment as complete?</p>
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-light w-50 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success w-50 rounded-pill" id="confirmPaymentBtn" onclick="executeCloseJob()">Yes, Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATION MODAL -->
+<div class="modal fade" id="notifModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold mb-0">Notifications</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="p-3 border-bottom">
+                    <small class="text-primary fw-bold">System Update</small>
+                    <p class="mb-0 small">Version 2.4.0 now supports digital signatures.</p>
+                </div>
+                <div class="p-3">
+                    <small class="text-muted fw-bold">Incentives</small>
+                    <p class="mb-0 small">Weekend bonus applied for all closed tickets.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LOGOUT MODAL -->
+<div class="modal fade" id="logoutModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 p-3 text-center">
+            <div class="modal-body">
+                <i class="bi bi-exclamation-circle text-warning fs-1 mb-3"></i>
+                <h5 class="fw-bold">Logout?</h5>
+                <p class="text-muted">Are you sure you want to end your current session?</p>
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-light w-50 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger w-50 rounded-pill" onclick="location.reload()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AUTH SECTION -->
+<div id="authSection" class="container mt-5" style="max-width: 400px;">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-primary">Technician Portal</h3>
+        <p class="text-muted">Rhythm RO Service Network</p>
+    </div>
+    
+    <div id="loginCard" class="card border-0 shadow-sm p-4 rounded-4">
+        <input type="text" class="form-control mb-3" placeholder="Technician ID / Email">
+        <input type="password" class="form-control mb-4" placeholder="Password">
+        <button onclick="login()" class="btn btn-rhythm w-100">Login to Dashboard</button>
+        <p class="text-center mt-3 small">New Technician? <a href="#" onclick="toggleAuth(true); return false;">Sign Up</a></p>
+    </div>
+
+    <div id="signupCard" class="card border-0 shadow-sm p-4 rounded-4 hidden">
+        <input type="text" class="form-control mb-2" id="regName" placeholder="Full Name">
+        <!-- Permanent Address removed -->
+        <input type="tel" class="form-control mb-2" id="regPhone" placeholder="Phone Number">
+        <input type="email" class="form-control mb-2" placeholder="Email ID">
+        <input type="password" class="form-control mb-4" placeholder="Create Password">
+        <button onclick="handleSignup()" class="btn btn-rhythm w-100">Create Account</button>
+        <p class="text-center mt-3 small">Already have account? <a href="#" onclick="toggleAuth(false); return false;">Login</a></p>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+    <div class="tech-header">
+        <div class="container" style="max-width: 500px;">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center">
+                    <div>
+                        <h5 class="mb-0 fw-bold" id="techDispName">Kumar S.</h5>
+                        <small class="opacity-75" id="techDispPhone">+91 90000 12345</small>
+                        <!-- address line below phone -->
+                        <div class="small opacity-75" id="techDispAddr">#123, 4th Cross, Bangalore</div>
+                    </div>
+                    <i class="bi bi-pencil-square profile-edit-icon cursor-pointer ms-2" data-bs-toggle="modal" data-bs-target="#profileModal" onclick="populateProfileModal()"></i>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <i class="bi bi-bell fs-4 cursor-pointer" data-bs-toggle="modal" data-bs-target="#notifModal"></i>
+                    <i class="bi bi-box-arrow-right fs-4 cursor-pointer" data-bs-toggle="modal" data-bs-target="#logoutModal"></i>
+                </div>
+            </div>
+            <div class="d-flex gap-3">
+                <button id="myJobsTab" class="btn btn-sm btn-light rounded-pill px-3" onclick="showSection('jobListSection')">My Jobs</button>
+                <button id="historyTab" class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="showSection('historySection')">History</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="max-width: 500px;">
+        <!-- job list section -->
+        <div id="jobListSection">
+            <h6 class="fw-bold mb-3">Assigned Jobs (<span id="jobCount">2</span>)</h6>
+            <div id="jobItems">
+                <div class="job-card d-flex align-items-center" tabindex="0" role="button" onclick="viewJob('Mathika', '#404 QA Street', '9840011223', 'Installation', 'Open')">
+                    <div class="type-indicator" style="background: #6366f1;"></div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <strong>Mathika</strong>
+                            <span class="status-pill status-open">Open</span>
+                        </div>
+                        <small class="text-muted">Installation • 10:30 AM</small>
+                    </div>
+                </div>
+                <div class="job-card d-flex align-items-center" tabindex="0" role="button" onclick="viewJob('Rajesh', '#12 Garden View', '9003055667', 'Service', 'In Process')">
+                    <div class="type-indicator" style="background: #ec4899;"></div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <strong>Rajesh</strong>
+                            <span class="status-pill status-process">In Process</span>
+                        </div>
+                        <small class="text-muted">General Service • 12:45 PM</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- history section -->
+        <div id="historySection" class="hidden">
+            <h6 class="fw-bold mb-3">Work History</h6>
+            <input type="tel" id="historySearch" class="form-control mb-3" placeholder="Search by Phone Number..." onkeyup="filterHistory()">
+            
+            <div class="accordion accordion-flush rounded-4 overflow-hidden shadow-sm" id="historyAccordion">
+                <div class="accordion-item" data-phone="9884012345">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#hist1">
+                            <div class="w-100">
+                                <div class="d-flex justify-content-between me-3">
+                                    <strong>Praveen Kumar</strong>
+                                    <span class="status-pill status-closed">Closed</span>
+                                </div>
+                                <small class="text-muted">9884012345 • 12 Mar 2026</small>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="hist1" class="accordion-collapse collapse" data-bs-parent="#historyAccordion">
+                        <div class="accordion-body small bg-white">
+                            <div class="row g-2">
+                                <div class="col-6"><strong>Service:</strong> Re-installation</div>
+                                <div class="col-6 text-end"><strong>Amount:</strong> ₹1,200</div>
+                                <div class="col-12 mt-2"><strong>Spares:</strong> Sediment Filter, Carbon Filter</div>
+                                <div class="col-12 mt-2"><strong>Comments:</strong> Pressure verified. System working fine.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item" data-phone="9000088776">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#hist2">
+                            <div class="w-100">
+                                <div class="d-flex justify-content-between me-3">
+                                    <strong>Anitha</strong>
+                                    <span class="status-pill status-closed">Closed</span>
+                                </div>
+                                <small class="text-muted">9000088776 • 10 Mar 2026</small>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="hist2" class="accordion-collapse collapse" data-bs-parent="#historyAccordion">
+                        <div class="accordion-body small bg-white">
+                            <div class="row g-2">
+                                <div class="col-6"><strong>Service:</strong> General Service</div>
+                                <div class="col-6 text-end"><strong>Amount:</strong> ₹450</div>
+                                <div class="col-12 mt-2"><strong>Spares:</strong> None</div>
+                                <div class="col-12 mt-2"><strong>Comments:</strong> Standard maintenance performed.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JOB DETAIL -->
+<div id="jobDetail" class="hidden container mt-3" style="max-width: 500px;">
+    <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobListSection')">
+        <i class="bi bi-chevron-left"></i> Back to Jobs
+    </button>
+    <div class="card border-0 shadow-sm p-3 rounded-4 mb-3">
+        <div class="d-flex justify-content-between mb-3">
+            <h5 class="fw-bold mb-0" id="detName">--</h5>
+            <span id="detStatus" class="status-pill">--</span>
+        </div>
+        <div class="mb-2"><i class="bi bi-telephone-fill text-primary me-2"></i> <span id="detPhone">--</span></div>
+        <div class="mb-3"><i class="bi bi-geo-alt-fill text-danger me-2"></i> <span id="detAddr">--</span></div>
+        <hr>
+        <p class="small fw-bold text-muted mb-2">SERVICE TYPE</p>
+        <p id="detService">--</p>
+        <div id="actionButtons">
+            <button id="startBtn" class="btn btn-warning w-100 fw-bold mb-2" onclick="updateStatus('In Process')">Start Work</button>
+            <button id="billBtn" class="btn btn-success w-100 fw-bold hidden" onclick="showBilling()">Generate Bill</button>
+        </div>
+    </div>
+</div>
+
+<!-- BILLING SECTION -->
+<div id="billingSection" class="hidden container mt-3" style="max-width: 500px;">
+    <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobDetail')">
+        <i class="bi bi-chevron-left"></i> Back
+    </button>
+    <h5 class="fw-bold mb-3">Service Billing</h5>
+    <div class="card border-0 shadow-sm p-3 rounded-4">
+        <label class="small fw-bold mb-2">Spare Parts</label>
+        <div class="input-group mb-3">
+            <input type="text" id="spareInput" class="form-control" list="spareOptions" placeholder="Type or select part...">
+            <datalist id="spareOptions">
+                <option value="Sediment Filter">
+                <option value="Carbon Filter">
+                <option value="RO Membrane">
+                <option value="SMPS Adapter">
+            </datalist>
+            <input type="number" id="tempPrice" class="form-control" style="max-width: 80px;" placeholder="₹">
+            <button class="btn btn-primary" onclick="addSpare()">Add</button>
+        </div>
+        <div id="spareList"></div>
+        <div class="mt-3 pt-3 border-top">
+            <div class="d-flex justify-content-between mb-2"><span>Subtotal:</span> <span id="spareTotal">₹0</span></div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Discount (₹):</span>
+                <input type="number" id="discountInp" class="form-control form-control-sm w-25" value="0" onchange="discountChanged()">
+            </div>
+            <div class="d-flex justify-content-between fw-bold fs-5 text-primary"><span>Total:</span> <span id="grandTotal">₹0</span></div>
+        </div>
+        <button class="btn btn-rhythm btn-send-bill w-100 mt-4" onclick="confirmSendBill()">Send Bill to Customer</button>
+    </div>
+</div>
+
+<!-- PAYMENT SECTION (updated with cash input & confirmation) -->
+<div id="paymentSection" class="hidden container mt-3" style="max-width: 500px;">
+    <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('billingSection')">
+        <i class="bi bi-chevron-left"></i> Back to Billing
+    </button>
+    <div class="card border-0 shadow-sm p-4 rounded-4 text-center">
+        <h6 class="fw-bold mb-4">Payment Method</h6>
+        <div class="d-flex gap-3 mb-4">
+            <button class="btn btn-outline-primary w-50 py-3" onclick="showQRPanel()">
+                <i class="bi bi-qr-code d-block fs-3 mb-1"></i> QR Code
+            </button>
+            <button class="btn btn-outline-success w-50 py-3" onclick="showCashPanel()">
+                <i class="bi bi-cash d-block fs-3 mb-1"></i> Cash
+            </button>
+        </div>
+        <!-- QR container -->
+        <div id="qrContainer" class="hidden">
+            <div class="qr-placeholder mb-3"><i class="bi bi-qr-code fs-1 opacity-25"></i></div>
+            <p class="small text-muted">Scan to pay <b id="payAmt">₹0</b></p>
+            <button class="btn btn-success w-100" onclick="confirmPayment('Online')">Payment Confirmed</button>
+        </div>
+        <!-- Cash container with input field -->
+        <div id="cashConfirmContainer" class="hidden">
+            <div class="mb-3">
+                <i class="bi bi-cash-stack fs-1 text-success"></i>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Cash received (₹)</label>
+                <input type="number" id="cashReceived" class="form-control text-center" min="0" step="1" value="0">
+            </div>
+            <p class="small text-muted">Enter amount and confirm</p>
+            <button class="btn btn-success w-100" onclick="confirmPayment('Cash')">Confirm Cash Payment</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ----- custom alert -----
+    function showAlert(msg, title = 'Alert') {
+        document.getElementById('alertMessage').innerText = msg;
+        document.getElementById('alertTitle').innerText = title;
+        const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+        alertModal.show();
+    }
+
+    // Global profile data
+    let technicianProfile = {
+        name: 'Kumar S.',
+        phone: '+91 90000 12345',
+        address: '#123, 4th Cross, Bangalore'
+    };
+
+    // Storage per job: key = phone number, value = { spares: [], discount: number }
+    let jobData = {};
+
+    // Current job identifier (phone)
+    let currentJobPhone = null;
+
+    // Local working array for the current job (synchronized with jobData)
+    let addedSpares = [];
+    let spareInventory = ["Sediment Filter", "Carbon Filter", "RO Membrane", "SMPS Adapter"];
+
+    // payment method to be closed (set by confirmPayment)
+    let pendingPaymentMethod = null;
+    let pendingCashAmount = null;
+
+    function toggleAuth(showSignup) {
+        document.getElementById('loginCard').classList.toggle('hidden', showSignup);
+        document.getElementById('signupCard').classList.toggle('hidden', !showSignup);
+        if (showSignup) document.getElementById('regName')?.focus();
+        else document.querySelector('#loginCard input')?.focus();
+    }
+
+    function handleSignup() {
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        if(!name || !phone) {
+            showAlert('Please fill in your name and phone number', 'Missing info');
+            return;
+        }
+        technicianProfile.name = name;
+        technicianProfile.phone = phone;
+        technicianProfile.address = ''; 
+        updateProfileDisplay();
+        login();
+    }
+
+    function updateProfileDisplay() {
+        document.getElementById('techDispName').innerText = technicianProfile.name;
+        document.getElementById('techDispPhone').innerText = technicianProfile.phone;
+        document.getElementById('techDispAddr').innerText = technicianProfile.address || 'Address not set';
+    }
+
+    function populateProfileModal() {
+        document.getElementById('profileName').value = technicianProfile.name;
+        document.getElementById('profilePhone').value = technicianProfile.phone;
+        document.getElementById('profileAddress').value = technicianProfile.address || '';
+    }
+
+    function saveProfile() {
+        const newName = document.getElementById('profileName').value.trim();
+        const newPhone = document.getElementById('profilePhone').value.trim();
+        const newAddr = document.getElementById('profileAddress').value.trim();
+
+        // Fix: close modal first if validation fails to avoid alert behind modal
+        if (!newName || !newPhone) {
+            // hide profile modal before showing alert
+            const profileModalEl = document.getElementById('profileModal');
+            const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
+            if (modalInstance) modalInstance.hide();
+            // slight delay to let modal hide, then show alert
+            setTimeout(() => {
+                showAlert('Name and phone are required', 'Cannot save');
+            }, 200);
+            return;
+        }
+
+        technicianProfile.name = newName;
+        technicianProfile.phone = newPhone;
+        technicianProfile.address = newAddr;
+        updateProfileDisplay();
+
+        // close modal
+        const profileModalEl = document.getElementById('profileModal');
+        const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
+        if (modalInstance) modalInstance.hide();
+
+        showAlert('Profile updated', 'Success');
+    }
+
+    function login() {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        showSection('jobListSection');
+    }
+
+    function showSection(id) {
+        const sections = ['jobListSection', 'historySection', 'jobDetail', 'billingSection', 'paymentSection'];
+        sections.forEach(s => {
+            const el = document.getElementById(s);
+            if(el) el.classList.add('hidden');
+        });
+
+        const target = document.getElementById(id);
+        if (target) target.classList.remove('hidden');
+
+        const dashboardEl = document.getElementById('dashboard');
+        if (id === 'jobListSection' || id === 'historySection') {
+            dashboardEl.classList.remove('hidden');
+        } else {
+            dashboardEl.classList.add('hidden');
+        }
+
+        // Update tab active styles
+        const myJobsBtn = document.getElementById('myJobsTab');
+        const historyBtn = document.getElementById('historyTab');
+        if (id === 'jobListSection') {
+            myJobsBtn.classList.remove('btn-outline-light');
+            myJobsBtn.classList.add('btn-light');
+            historyBtn.classList.remove('btn-light');
+            historyBtn.classList.add('btn-outline-light');
+        } else if (id === 'historySection') {
+            historyBtn.classList.remove('btn-outline-light');
+            historyBtn.classList.add('btn-light');
+            myJobsBtn.classList.remove('btn-light');
+            myJobsBtn.classList.add('btn-outline-light');
+        }
+    }
+
+    function viewJob(name, addr, phone, service, status) {
+        showSection('jobDetail');
+        document.getElementById('detName').innerText = name;
+        document.getElementById('detAddr').innerText = addr;
+        document.getElementById('detPhone').innerText = phone;
+        document.getElementById('detService').innerText = service;
+        document.getElementById('detStatus').innerText = status;
+        document.getElementById('detStatus').className = `status-pill status-${status.toLowerCase().replace(' ', '')}`;
+        
+        document.getElementById('startBtn').classList.toggle('hidden', status !== 'Open');
+        document.getElementById('billBtn').classList.toggle('hidden', status !== 'In Process');
+
+        // Set current job phone and load data for this job
+        currentJobPhone = phone;
+        if (!jobData[currentJobPhone]) {
+            jobData[currentJobPhone] = { spares: [], discount: 0 };
+        }
+        addedSpares = [...jobData[currentJobPhone].spares];
+        // Note: discount is not shown in jobDetail, but we load it for later use in billing
+    }
+
+    function updateStatus(newStatus) {
+        document.getElementById('detStatus').innerText = newStatus;
+        document.getElementById('detStatus').className = `status-pill status-process`;
+        document.getElementById('startBtn').classList.add('hidden');
+        document.getElementById('billBtn').classList.remove('hidden');
+        // focus moves to bill button after clicking Start (user action)
+        setTimeout(() => document.getElementById('billBtn').focus(), 100);
+    }
+
+    function showBilling() { 
+        showSection('billingSection');
+        // Ensure current job data exists
+        if (currentJobPhone && jobData[currentJobPhone]) {
+            addedSpares = [...jobData[currentJobPhone].spares];
+            document.getElementById('discountInp').value = jobData[currentJobPhone].discount || 0;
+        } else {
+            addedSpares = [];
+            document.getElementById('discountInp').value = 0;
+        }
+        renderSpares(); // display spares for this job
+        calculateTotal(); // ensure totals are updated with loaded discount
+        // focus spare input after user clicks "Generate Bill" (user action)
+        setTimeout(() => document.getElementById('spareInput')?.focus(), 150);
+    }
+
+    // Helper to sync current addedSpares and discount back to the global store
+    function syncJobData() {
+        if (currentJobPhone) {
+            if (!jobData[currentJobPhone]) {
+                jobData[currentJobPhone] = { spares: [], discount: 0 };
+            }
+            jobData[currentJobPhone].spares = [...addedSpares];
+            jobData[currentJobPhone].discount = parseInt(document.getElementById('discountInp').value) || 0;
+        }
+    }
+
+    function discountChanged() {
+        syncJobData();
+        calculateTotal();
+    }
+
+    function addSpare() {
+        const nameInp = document.getElementById('spareInput');
+        const priceInp = document.getElementById('tempPrice');
+        const name = nameInp.value.trim();
+        const price = parseInt(priceInp.value) || 0;
+
+        if(!name) return;
+
+        addedSpares.push({ id: Date.now(), name, price });
+        syncJobData();
+        
+        if(!spareInventory.includes(name)) {
+            spareInventory.push(name);
+            const dl = document.getElementById('spareOptions');
+            const opt = document.createElement('option');
+            opt.value = name;
+            dl.appendChild(opt);
+        }
+
+        nameInp.value = ''; priceInp.value = '';
+        renderSpares();
+        nameInp.focus(); // keep focus on input after adding (user expects it)
+    }
+
+    function renderSpares() {
+        const list = document.getElementById('spareList');
+        list.innerHTML = addedSpares.map(s => `
+            <div class="spare-row d-flex justify-content-between align-items-center">
+                <span class="small">${s.name}</span>
+                <div class="d-flex align-items-center gap-2">
+                    ₹<input type="number" class="form-control form-control-sm" style="width: 70px" value="${s.price}" onchange="updatePrice(${s.id}, this.value)">
+                    <i class="bi bi-x-circle text-danger cursor-pointer" onclick="removeSpare(${s.id})"></i>
+                </div>
+            </div>
+        `).join('');
+        calculateTotal();
+    }
+
+    function updatePrice(id, val) {
+        const spare = addedSpares.find(s => s.id === id);
+        if(spare) spare.price = parseInt(val) || 0;
+        syncJobData();
+        calculateTotal();
+    }
+
+    function removeSpare(id) {
+        addedSpares = addedSpares.filter(s => s.id !== id);
+        syncJobData();
+        renderSpares();
+    }
+
+    function calculateTotal() {
+        const sub = addedSpares.reduce((sum, s) => sum + s.price, 0);
+        const disc = parseInt(document.getElementById('discountInp').value) || 0;
+        const total = Math.max(0, sub - disc);
+        document.getElementById('spareTotal').innerText = `₹${sub}`;
+        document.getElementById('grandTotal').innerText = `₹${total}`;
+        document.getElementById('payAmt').innerText = `₹${total}`;
+        // set default cash received to total
+        document.getElementById('cashReceived').value = total;
+    }
+
+    // ----- Bill confirmation -----
+    function confirmSendBill() {
+        const modal = new bootstrap.Modal(document.getElementById('confirmBillModal'));
+        modal.show();
+    }
+
+    function proceedToPaymentConfirmed() {
+        showSection('paymentSection');
+        document.getElementById('qrContainer').classList.add('hidden');
+        document.getElementById('cashConfirmContainer').classList.add('hidden');
+    }
+
+    // Payment panel toggles
+    function showQRPanel() {
+        document.getElementById('qrContainer').classList.remove('hidden');
+        document.getElementById('cashConfirmContainer').classList.add('hidden');
+    }
+
+    function showCashPanel() {
+        document.getElementById('cashConfirmContainer').classList.remove('hidden');
+        document.getElementById('qrContainer').classList.add('hidden');
+        // ensure cash field shows latest total
+        calculateTotal(); // updates cashReceived default
+    }
+
+    // ----- Payment confirmation with modal -----
+    function confirmPayment(method) {
+        if (method === 'Cash') {
+            const cashReceived = parseFloat(document.getElementById('cashReceived').value);
+            if (isNaN(cashReceived) || cashReceived < 0) {
+                showAlert('Please enter a valid cash amount', 'Invalid amount');
+                return;
+            }
+            pendingCashAmount = cashReceived;
+        } else {
+            pendingCashAmount = null;
+        }
+        pendingPaymentMethod = method;
+
+        // Set modal message
+        const title = `Confirm ${method} Payment`;
+        let msg = `Are you sure you want to mark this payment as complete via ${method}?`;
+        if (method === 'Cash' && pendingCashAmount !== null) {
+            msg = `Confirm cash payment of ₹${pendingCashAmount}?`;
+        }
+        document.getElementById('confirmPaymentTitle').innerText = title;
+        document.getElementById('confirmPaymentMessage').innerText = msg;
+
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmPaymentModal'));
+        confirmModal.show();
+    }
+
+    // Called when user confirms in the modal
+    function executeCloseJob() {
+        // close any open modals
+        const confirmModalEl = document.getElementById('confirmPaymentModal');
+        const modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
+        if (modalInstance) modalInstance.hide();
+
+        // proceed with job closure
+        const method = pendingPaymentMethod;
+        if (!method) return;
+
+        let message = `Job closed via ${method}.`;
+        if (method === 'Cash' && pendingCashAmount !== null) {
+            message = `Job closed via Cash (₹${pendingCashAmount} received).`;
+        }
+        showAlert(message + ' Status synced across apps.', 'Job Completed');
+        setTimeout(() => location.reload(), 1800);
+    }
+
+    function filterHistory() {
+        const val = document.getElementById('historySearch').value;
+        const items = document.querySelectorAll('#historyAccordion .accordion-item');
+        items.forEach(item => {
+            const phone = item.getAttribute('data-phone');
+            item.classList.toggle('hidden', !phone.includes(val));
+        });
+    }
+
+    window.onload = function() {
+        updateProfileDisplay();
+        calculateTotal(); // initial totals
+        // Ensure active tab is set correctly (My Jobs active by default)
+        document.getElementById('myJobsTab').classList.add('btn-light');
+        document.getElementById('historyTab').classList.add('btn-outline-light');
+    };
+</script>
+</body>
+</html>
