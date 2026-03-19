@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Rhythm RO · Technician</title>
+    <title>Rhythm RO · Technician · Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -21,7 +21,6 @@
             padding-bottom: 30px;
         }
 
-        /* ----- pointer cursor for anything clickable ----- */
         .cursor-pointer,
         [onclick],
         .btn,
@@ -33,7 +32,6 @@
             cursor: pointer !important;
         }
 
-        /* ----- hover effect for all buttons ----- */
         .btn {
             transition: filter 0.2s ease, box-shadow 0.15s ease;
         }
@@ -49,13 +47,11 @@
             filter: brightness(0.95);
         }
 
-        /* focus states (visible) */
         .btn:focus, .form-control:focus, .accordion-button:focus, .job-card:focus {
             box-shadow: 0 0 0 0.25rem rgba(0, 119, 182, 0.4) !important;
             outline: none;
         }
 
-        /* job cards */
         .job-card {
             background: white; border-radius: 18px; padding: 15px;
             margin-bottom: 15px; border: 1px solid #e2e8f0;
@@ -100,7 +96,6 @@
             filter: none;
         }
 
-        /* modals centered */
         .modal-dialog-centered {
             display: flex;
             align-items: center;
@@ -129,6 +124,97 @@
         .profile-edit-icon:hover {
             opacity: 1;
             color: #a0d4ff;
+        }
+
+        /* wider spare price input */
+        .spare-price-input {
+            width: 100px !important;
+        }
+
+        .photo-preview {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .photo-preview img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+        .photo-upload-btn {
+            background: #f1f5f9;
+            border: 1px dashed var(--rhythm-blue);
+            color: var(--rhythm-blue);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        .clickable-link {
+            color: inherit;
+            text-decoration: none;
+        }
+        .clickable-link:hover {
+            text-decoration: underline;
+            color: var(--rhythm-blue);
+        }
+
+        /* Custom spare parts input group – 70% / 30% split with combobox */
+        .spare-custom-group {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            position: relative;
+        }
+        .spare-name-wrapper {
+            flex: 7;
+            position: relative;
+        }
+        .spare-name-input {
+            width: 100%;
+        }
+        .spare-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 20px -10px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .spare-dropdown.show {
+            display: block;
+        }
+        .spare-dropdown-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .spare-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .spare-dropdown-item:hover {
+            background-color: var(--rhythm-light-bg);
+        }
+        .spare-dropdown-item.add-new {
+            color: var(--rhythm-blue);
+            font-weight: 600;
+        }
+        .spare-price-input {
+            flex: 3;
+            min-width: 80px;
+        }
+        .spare-custom-group .btn {
+            flex: 0 0 auto;
         }
     </style>
 </head>
@@ -244,7 +330,7 @@
                 <p class="text-muted">Are you sure you want to end your current session?</p>
                 <div class="d-flex gap-2 mt-4">
                     <button class="btn btn-light w-50 rounded-pill" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-danger w-50 rounded-pill" onclick="location.reload()">Logout</button>
+                    <button class="btn btn-danger w-50 rounded-pill" onclick="logout()">Logout</button>
                 </div>
             </div>
         </div>
@@ -267,7 +353,6 @@
 
     <div id="signupCard" class="card border-0 shadow-sm p-4 rounded-4 hidden">
         <input type="text" class="form-control mb-2" id="regName" placeholder="Full Name">
-        <!-- Permanent Address removed -->
         <input type="tel" class="form-control mb-2" id="regPhone" placeholder="Phone Number">
         <input type="email" class="form-control mb-2" placeholder="Email ID">
         <input type="password" class="form-control mb-4" placeholder="Create Password">
@@ -285,7 +370,6 @@
                     <div>
                         <h5 class="mb-0 fw-bold" id="techDispName">Kumar S.</h5>
                         <small class="opacity-75" id="techDispPhone">+91 90000 12345</small>
-                        <!-- address line below phone -->
                         <div class="small opacity-75" id="techDispAddr">#123, 4th Cross, Bangalore</div>
                     </div>
                     <i class="bi bi-pencil-square profile-edit-icon cursor-pointer ms-2" data-bs-toggle="modal" data-bs-target="#profileModal" onclick="populateProfileModal()"></i>
@@ -303,40 +387,48 @@
     </div>
 
     <div class="container" style="max-width: 500px;">
-        <!-- job list section -->
+        <!-- job list section with search -->
         <div id="jobListSection">
+            <div class="d-flex gap-2 mb-3">
+                <input type="text" id="jobSearch" class="form-control" placeholder="Search by name, phone, or Booking ID" oninput="filterJobs()">
+            </div>
             <h6 class="fw-bold mb-3">Assigned Jobs (<span id="jobCount">2</span>)</h6>
             <div id="jobItems">
-                <div class="job-card d-flex align-items-center" tabindex="0" role="button" onclick="viewJob('Mathika', '#404 QA Street', '9840011223', 'Installation', 'Open')">
+                <!-- Added data attributes for search: name, phone, booking id, ro model -->
+                <div class="job-card d-flex align-items-center" tabindex="0" role="button"
+                     data-name="Mathika" data-phone="9840011223" data-booking="RHY001" data-ro="Kent Grand Plus"
+                     onclick="viewJob('Mathika', '#404 QA Street', '9840011223', 'Installation', 'Open', 'RHY001', 'Kent Grand Plus')">
                     <div class="type-indicator" style="background: #6366f1;"></div>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between">
                             <strong>Mathika</strong>
                             <span class="status-pill status-open">Open</span>
                         </div>
-                        <small class="text-muted">Installation • 10:30 AM</small>
+                        <small class="text-muted">Installation • 10:30 AM • ID: RHY001</small>
                     </div>
                 </div>
-                <div class="job-card d-flex align-items-center" tabindex="0" role="button" onclick="viewJob('Rajesh', '#12 Garden View', '9003055667', 'Service', 'In Process')">
+                <div class="job-card d-flex align-items-center" tabindex="0" role="button"
+                     data-name="Rajesh" data-phone="9003055667" data-booking="RHY002" data-ro="AquaSure"
+                     onclick="viewJob('Rajesh', '#12 Garden View', '9003055667', 'Service', 'In Process', 'RHY002', 'AquaSure')">
                     <div class="type-indicator" style="background: #ec4899;"></div>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between">
                             <strong>Rajesh</strong>
                             <span class="status-pill status-process">In Process</span>
                         </div>
-                        <small class="text-muted">General Service • 12:45 PM</small>
+                        <small class="text-muted">General Service • 12:45 PM • ID: RHY002</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- history section -->
+        <!-- history section with search by phone or booking id -->
         <div id="historySection" class="hidden">
             <h6 class="fw-bold mb-3">Work History</h6>
-            <input type="tel" id="historySearch" class="form-control mb-3" placeholder="Search by Phone Number..." onkeyup="filterHistory()">
+            <input type="text" id="historySearch" class="form-control mb-3" placeholder="Search by Phone or Booking ID..." onkeyup="filterHistory()">
             
             <div class="accordion accordion-flush rounded-4 overflow-hidden shadow-sm" id="historyAccordion">
-                <div class="accordion-item" data-phone="9884012345">
+                <div class="accordion-item" data-phone="9884012345" data-booking="RHY100">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#hist1">
                             <div class="w-100">
@@ -344,7 +436,7 @@
                                     <strong>Praveen Kumar</strong>
                                     <span class="status-pill status-closed">Closed</span>
                                 </div>
-                                <small class="text-muted">9884012345 • 12 Mar 2026</small>
+                                <small class="text-muted">9884012345 • RHY100 • 12 Mar 2026</small>
                             </div>
                         </button>
                     </h2>
@@ -359,7 +451,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item" data-phone="9000088776">
+                <div class="accordion-item" data-phone="9000088776" data-booking="RHY101">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#hist2">
                             <div class="w-100">
@@ -367,7 +459,7 @@
                                     <strong>Anitha</strong>
                                     <span class="status-pill status-closed">Closed</span>
                                 </div>
-                                <small class="text-muted">9000088776 • 10 Mar 2026</small>
+                                <small class="text-muted">9000088776 • RHY101 • 10 Mar 2026</small>
                             </div>
                         </button>
                     </h2>
@@ -387,7 +479,7 @@
     </div>
 </div>
 
-<!-- JOB DETAIL -->
+<!-- JOB DETAIL (enhanced with booking id, ro model, hyperlinks) -->
 <div id="jobDetail" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobListSection')">
         <i class="bi bi-chevron-left"></i> Back to Jobs
@@ -397,8 +489,16 @@
             <h5 class="fw-bold mb-0" id="detName">--</h5>
             <span id="detStatus" class="status-pill">--</span>
         </div>
-        <div class="mb-2"><i class="bi bi-telephone-fill text-primary me-2"></i> <span id="detPhone">--</span></div>
-        <div class="mb-3"><i class="bi bi-geo-alt-fill text-danger me-2"></i> <span id="detAddr">--</span></div>
+        <div class="mb-2">
+            <i class="bi bi-telephone-fill text-primary me-2"></i>
+            <a href="#" id="detPhoneLink" class="clickable-link">--</a>
+        </div>
+        <div class="mb-3">
+            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+            <a href="#" id="detAddrLink" target="_blank" class="clickable-link">--</a>
+        </div>
+        <div class="mb-2"><i class="bi bi-upc-scan me-2"></i> Booking ID: <span id="detBookingId">--</span></div>
+        <div class="mb-3"><i class="bi bi-water me-2"></i> RO Model: <span id="detRoModel">--</span></div>
         <hr>
         <p class="small fw-bold text-muted mb-2">SERVICE TYPE</p>
         <p id="detService">--</p>
@@ -409,39 +509,65 @@
     </div>
 </div>
 
-<!-- BILLING SECTION -->
+<!-- BILLING SECTION (enhanced with searchable dropdown + add new) -->
 <div id="billingSection" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobDetail')">
         <i class="bi bi-chevron-left"></i> Back
     </button>
     <h5 class="fw-bold mb-3">Service Billing</h5>
     <div class="card border-0 shadow-sm p-3 rounded-4">
+        <div class="mb-2 small"><span class="fw-bold">Booking ID:</span> <span id="billBookingId">--</span></div>
+        <div class="mb-3 small"><span class="fw-bold">RO Model:</span> <span id="billRoModel">--</span></div>
+
         <label class="small fw-bold mb-2">Spare Parts</label>
-        <div class="input-group mb-3">
-            <input type="text" id="spareInput" class="form-control" list="spareOptions" placeholder="Type or select part...">
-            <datalist id="spareOptions">
-                <option value="Sediment Filter">
-                <option value="Carbon Filter">
-                <option value="RO Membrane">
-                <option value="SMPS Adapter">
-            </datalist>
-            <input type="number" id="tempPrice" class="form-control" style="max-width: 80px;" placeholder="₹">
+        <!-- Custom group with searchable dropdown + add new -->
+        <div class="spare-custom-group mb-3">
+            <div class="spare-name-wrapper">
+                <input type="text" id="spareInput" class="form-control spare-name-input" placeholder="Type or select part..." autocomplete="off">
+                <div id="spareDropdown" class="spare-dropdown"></div>
+            </div>
+            <input type="number" id="tempPrice" class="form-control spare-price-input" placeholder="₹" min="0">
             <button class="btn btn-primary" onclick="addSpare()">Add</button>
         </div>
         <div id="spareList"></div>
+
+        <!-- Service Fee (editable) -->
         <div class="mt-3 pt-3 border-top">
-            <div class="d-flex justify-content-between mb-2"><span>Subtotal:</span> <span id="spareTotal">₹0</span></div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Service Fee (₹):</span>
+                <input type="number" id="serviceFee" class="form-control form-control-sm w-25" value="0" min="0" onchange="calculateTotal()">
+            </div>
+            <div class="d-flex justify-content-between mb-2"><span>Subtotal (spares):</span> <span id="spareTotal">₹0</span></div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Discount (₹):</span>
-                <input type="number" id="discountInp" class="form-control form-control-sm w-25" value="0" onchange="discountChanged()">
+                <input type="number" id="discountInp" class="form-control form-control-sm w-25" value="0" min="0" onchange="discountChanged()">
             </div>
             <div class="d-flex justify-content-between fw-bold fs-5 text-primary"><span>Total:</span> <span id="grandTotal">₹0</span></div>
         </div>
+
+        <!-- Comments -->
+        <div class="mt-3">
+            <label class="small fw-bold">Comments about completed work</label>
+            <textarea id="workComments" class="form-control mt-1" rows="2" placeholder="Add notes..."></textarea>
+        </div>
+
+        <!-- Before & After Photos -->
+        <div class="mt-3">
+            <label class="small fw-bold d-block">Before & After Photos</label>
+            <div class="photo-preview" id="photoPreview"></div>
+            <div class="d-flex gap-2 mt-2">
+                <button class="photo-upload-btn" onclick="uploadPhoto('before')"><i class="bi bi-camera me-1"></i>Add Before</button>
+                <button class="photo-upload-btn" onclick="uploadPhoto('after')"><i class="bi bi-camera me-1"></i>Add After</button>
+            </div>
+            <input type="file" id="beforePhoto" accept="image/*" class="hidden" onchange="handlePhoto('before', this)">
+            <input type="file" id="afterPhoto" accept="image/*" class="hidden" onchange="handlePhoto('after', this)">
+        </div>
+
         <button class="btn btn-rhythm btn-send-bill w-100 mt-4" onclick="confirmSendBill()">Send Bill to Customer</button>
     </div>
 </div>
 
-<!-- PAYMENT SECTION (updated with cash input & confirmation) -->
+<!-- PAYMENT SECTION (with actual QR code image) -->
 <div id="paymentSection" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('billingSection')">
         <i class="bi bi-chevron-left"></i> Back to Billing
@@ -456,13 +582,13 @@
                 <i class="bi bi-cash d-block fs-3 mb-1"></i> Cash
             </button>
         </div>
-        <!-- QR container -->
+        <!-- QR container with actual QR code image (static for demo) -->
         <div id="qrContainer" class="hidden">
-            <div class="qr-placeholder mb-3"><i class="bi bi-qr-code fs-1 opacity-25"></i></div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TechnicianKumar" class="img-fluid mb-3" style="width:150px; height:150px; border-radius:20px;" alt="QR Code">
             <p class="small text-muted">Scan to pay <b id="payAmt">₹0</b></p>
             <button class="btn btn-success w-100" onclick="confirmPayment('Online')">Payment Confirmed</button>
         </div>
-        <!-- Cash container with input field -->
+        <!-- Cash container -->
         <div id="cashConfirmContainer" class="hidden">
             <div class="mb-3">
                 <i class="bi bi-cash-stack fs-1 text-success"></i>
@@ -494,7 +620,7 @@
         address: '#123, 4th Cross, Bangalore'
     };
 
-    // Storage per job: key = phone number, value = { spares: [], discount: number }
+    // Storage per job: key = phone number, value = { spares: [], discount: number, serviceFee: number, comments: string, beforePhoto: string, afterPhoto: string }
     let jobData = {};
 
     // Current job identifier (phone)
@@ -502,11 +628,97 @@
 
     // Local working array for the current job (synchronized with jobData)
     let addedSpares = [];
-    let spareInventory = ["Sediment Filter", "Carbon Filter", "RO Membrane", "SMPS Adapter"];
 
     // payment method to be closed (set by confirmPayment)
     let pendingPaymentMethod = null;
     let pendingCashAmount = null;
+
+    // ----- Searchable spare parts combobox -----
+    let spareOptions = ["Sediment Filter", "Carbon Filter", "RO Membrane", "SMPS Adapter"];
+
+    function initSpareCombobox() {
+        const input = document.getElementById('spareInput');
+        const dropdown = document.getElementById('spareDropdown');
+        if (!input || !dropdown) return;
+
+        // Show dropdown on focus
+        input.addEventListener('focus', () => {
+            renderSpareDropdown();
+            dropdown.classList.add('show');
+        });
+
+        // Filter as user types
+        input.addEventListener('input', () => {
+            renderSpareDropdown();
+            dropdown.classList.add('show');
+        });
+
+        // Hide dropdown when clicking outside (with delay to allow click on item)
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                dropdown.classList.remove('show');
+            }, 200);
+        });
+
+        // Prevent dropdown from hiding when clicking inside it
+        dropdown.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // keep focus on input
+        });
+    }
+
+    function renderSpareDropdown() {
+        const input = document.getElementById('spareInput');
+        const dropdown = document.getElementById('spareDropdown');
+        const query = input.value.trim().toLowerCase();
+        let filtered = spareOptions.filter(opt => opt.toLowerCase().includes(query));
+        // Always show at most all options, but we can limit if desired
+        let html = '';
+        filtered.forEach(opt => {
+            html += `<div class="spare-dropdown-item" onclick="selectSpareOption('${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
+        });
+        // If no match and query not empty, show "Add New" option
+        if (query && !spareOptions.some(opt => opt.toLowerCase() === query)) {
+            html += `<div class="spare-dropdown-item add-new" onclick="addNewSpareOption('${query.replace(/'/g, "\\'")}')">+ Add "${query}"</div>`;
+        }
+        dropdown.innerHTML = html || '<div class="spare-dropdown-item text-muted">No options</div>';
+    }
+
+    function selectSpareOption(opt) {
+        document.getElementById('spareInput').value = opt;
+        document.getElementById('spareDropdown').classList.remove('show');
+    }
+
+    function addNewSpareOption(newOpt) {
+        // Add to spareOptions if not already present
+        if (!spareOptions.includes(newOpt)) {
+            spareOptions.push(newOpt);
+        }
+        selectSpareOption(newOpt);
+    }
+
+    // Update addSpare to possibly add new spare to options (if user typed a new one)
+    function addSpare() {
+        const nameInp = document.getElementById('spareInput');
+        const priceInp = document.getElementById('tempPrice');
+        const name = nameInp.value.trim();
+        const price = parseInt(priceInp.value) || 0;
+
+        if(!name) return;
+
+        // If name is not in spareOptions, add it (so it appears in future suggestions)
+        if (!spareOptions.includes(name)) {
+            spareOptions.push(name);
+        }
+
+        addedSpares.push({ id: Date.now(), name, price });
+        syncJobData();
+
+        nameInp.value = ''; priceInp.value = '';
+        renderSpares();
+        nameInp.focus();
+    }
+
+    // ----- end combobox -----
 
     function toggleAuth(showSignup) {
         document.getElementById('loginCard').classList.toggle('hidden', showSignup);
@@ -546,13 +758,10 @@
         const newPhone = document.getElementById('profilePhone').value.trim();
         const newAddr = document.getElementById('profileAddress').value.trim();
 
-        // Fix: close modal first if validation fails to avoid alert behind modal
         if (!newName || !newPhone) {
-            // hide profile modal before showing alert
             const profileModalEl = document.getElementById('profileModal');
             const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
             if (modalInstance) modalInstance.hide();
-            // slight delay to let modal hide, then show alert
             setTimeout(() => {
                 showAlert('Name and phone are required', 'Cannot save');
             }, 200);
@@ -564,12 +773,18 @@
         technicianProfile.address = newAddr;
         updateProfileDisplay();
 
-        // close modal
         const profileModalEl = document.getElementById('profileModal');
         const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
         if (modalInstance) modalInstance.hide();
 
         showAlert('Profile updated', 'Success');
+    }
+
+    function logout() {
+        // Simply hide dashboard and show auth (no reload)
+        bootstrap.Modal.getInstance(document.getElementById('logoutModal')).hide();
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
     }
 
     function login() {
@@ -595,7 +810,6 @@
             dashboardEl.classList.add('hidden');
         }
 
-        // Update tab active styles
         const myJobsBtn = document.getElementById('myJobsTab');
         const historyBtn = document.getElementById('historyTab');
         if (id === 'jobListSection') {
@@ -611,7 +825,8 @@
         }
     }
 
-    function viewJob(name, addr, phone, service, status) {
+    // Enhanced viewJob with bookingId and roModel
+    function viewJob(name, addr, phone, service, status, bookingId, roModel) {
         showSection('jobDetail');
         document.getElementById('detName').innerText = name;
         document.getElementById('detAddr').innerText = addr;
@@ -619,17 +834,23 @@
         document.getElementById('detService').innerText = service;
         document.getElementById('detStatus').innerText = status;
         document.getElementById('detStatus').className = `status-pill status-${status.toLowerCase().replace(' ', '')}`;
-        
+        document.getElementById('detBookingId').innerText = bookingId || '--';
+        document.getElementById('detRoModel').innerText = roModel || '--';
+
+        // Create tel: and maps links
+        document.getElementById('detPhoneLink').href = `tel:${phone}`;
+        document.getElementById('detPhoneLink').innerText = phone;
+        document.getElementById('detAddrLink').href = `https://maps.google.com/?q=${encodeURIComponent(addr)}`;
+        document.getElementById('detAddrLink').innerText = addr;
+
         document.getElementById('startBtn').classList.toggle('hidden', status !== 'Open');
         document.getElementById('billBtn').classList.toggle('hidden', status !== 'In Process');
 
-        // Set current job phone and load data for this job
         currentJobPhone = phone;
         if (!jobData[currentJobPhone]) {
-            jobData[currentJobPhone] = { spares: [], discount: 0 };
+            jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null };
         }
         addedSpares = [...jobData[currentJobPhone].spares];
-        // Note: discount is not shown in jobDetail, but we load it for later use in billing
     }
 
     function updateStatus(newStatus) {
@@ -637,34 +858,48 @@
         document.getElementById('detStatus').className = `status-pill status-process`;
         document.getElementById('startBtn').classList.add('hidden');
         document.getElementById('billBtn').classList.remove('hidden');
-        // focus moves to bill button after clicking Start (user action)
         setTimeout(() => document.getElementById('billBtn').focus(), 100);
     }
 
-    function showBilling() { 
+    function showBilling() {
         showSection('billingSection');
-        // Ensure current job data exists
         if (currentJobPhone && jobData[currentJobPhone]) {
             addedSpares = [...jobData[currentJobPhone].spares];
             document.getElementById('discountInp').value = jobData[currentJobPhone].discount || 0;
+            document.getElementById('serviceFee').value = jobData[currentJobPhone].serviceFee || 0;
+            document.getElementById('workComments').value = jobData[currentJobPhone].comments || '';
+            // Restore photos
+            document.getElementById('photoPreview').innerHTML = ''; // clear
+            if (jobData[currentJobPhone].beforePhoto) {
+                addPhotoPreview('before', jobData[currentJobPhone].beforePhoto);
+            }
+            if (jobData[currentJobPhone].afterPhoto) {
+                addPhotoPreview('after', jobData[currentJobPhone].afterPhoto);
+            }
+            // Set booking and ro model from jobDetail
+            document.getElementById('billBookingId').innerText = document.getElementById('detBookingId').innerText;
+            document.getElementById('billRoModel').innerText = document.getElementById('detRoModel').innerText;
         } else {
             addedSpares = [];
             document.getElementById('discountInp').value = 0;
+            document.getElementById('serviceFee').value = 0;
+            document.getElementById('workComments').value = '';
+            document.getElementById('photoPreview').innerHTML = '';
         }
-        renderSpares(); // display spares for this job
-        calculateTotal(); // ensure totals are updated with loaded discount
-        // focus spare input after user clicks "Generate Bill" (user action)
+        renderSpares();
+        calculateTotal();
         setTimeout(() => document.getElementById('spareInput')?.focus(), 150);
     }
 
-    // Helper to sync current addedSpares and discount back to the global store
     function syncJobData() {
         if (currentJobPhone) {
             if (!jobData[currentJobPhone]) {
-                jobData[currentJobPhone] = { spares: [], discount: 0 };
+                jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null };
             }
             jobData[currentJobPhone].spares = [...addedSpares];
             jobData[currentJobPhone].discount = parseInt(document.getElementById('discountInp').value) || 0;
+            jobData[currentJobPhone].serviceFee = parseInt(document.getElementById('serviceFee').value) || 0;
+            jobData[currentJobPhone].comments = document.getElementById('workComments').value;
         }
     }
 
@@ -673,29 +908,7 @@
         calculateTotal();
     }
 
-    function addSpare() {
-        const nameInp = document.getElementById('spareInput');
-        const priceInp = document.getElementById('tempPrice');
-        const name = nameInp.value.trim();
-        const price = parseInt(priceInp.value) || 0;
-
-        if(!name) return;
-
-        addedSpares.push({ id: Date.now(), name, price });
-        syncJobData();
-        
-        if(!spareInventory.includes(name)) {
-            spareInventory.push(name);
-            const dl = document.getElementById('spareOptions');
-            const opt = document.createElement('option');
-            opt.value = name;
-            dl.appendChild(opt);
-        }
-
-        nameInp.value = ''; priceInp.value = '';
-        renderSpares();
-        nameInp.focus(); // keep focus on input after adding (user expects it)
-    }
+    // addSpare is now defined above (replaces old version)
 
     function renderSpares() {
         const list = document.getElementById('spareList');
@@ -703,7 +916,7 @@
             <div class="spare-row d-flex justify-content-between align-items-center">
                 <span class="small">${s.name}</span>
                 <div class="d-flex align-items-center gap-2">
-                    ₹<input type="number" class="form-control form-control-sm" style="width: 70px" value="${s.price}" onchange="updatePrice(${s.id}, this.value)">
+                    ₹<input type="number" class="form-control form-control-sm spare-price-input" value="${s.price}" min="0" onchange="updatePrice(${s.id}, this.value)">
                     <i class="bi bi-x-circle text-danger cursor-pointer" onclick="removeSpare(${s.id})"></i>
                 </div>
             </div>
@@ -726,16 +939,47 @@
 
     function calculateTotal() {
         const sub = addedSpares.reduce((sum, s) => sum + s.price, 0);
+        const service = parseInt(document.getElementById('serviceFee').value) || 0;
         const disc = parseInt(document.getElementById('discountInp').value) || 0;
-        const total = Math.max(0, sub - disc);
+        const total = Math.max(0, sub + service - disc);
         document.getElementById('spareTotal').innerText = `₹${sub}`;
         document.getElementById('grandTotal').innerText = `₹${total}`;
         document.getElementById('payAmt').innerText = `₹${total}`;
-        // set default cash received to total
         document.getElementById('cashReceived').value = total;
+        syncJobData();
     }
 
-    // ----- Bill confirmation -----
+    // Photo handling
+    function uploadPhoto(type) {
+        document.getElementById(type + 'Photo').click();
+    }
+
+    function handlePhoto(type, input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (currentJobPhone) {
+                    jobData[currentJobPhone][type + 'Photo'] = e.target.result;
+                }
+                addPhotoPreview(type, e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function addPhotoPreview(type, src) {
+        const container = document.getElementById('photoPreview');
+        // Remove existing preview of same type if any
+        const existing = document.querySelector(`.photo-preview img[data-type="${type}"]`);
+        if (existing) existing.remove();
+        const img = document.createElement('img');
+        img.src = src;
+        img.setAttribute('data-type', type);
+        img.title = type === 'before' ? 'Before' : 'After';
+        container.appendChild(img);
+    }
+
+    // Bill confirmation
     function confirmSendBill() {
         const modal = new bootstrap.Modal(document.getElementById('confirmBillModal'));
         modal.show();
@@ -747,7 +991,6 @@
         document.getElementById('cashConfirmContainer').classList.add('hidden');
     }
 
-    // Payment panel toggles
     function showQRPanel() {
         document.getElementById('qrContainer').classList.remove('hidden');
         document.getElementById('cashConfirmContainer').classList.add('hidden');
@@ -756,11 +999,9 @@
     function showCashPanel() {
         document.getElementById('cashConfirmContainer').classList.remove('hidden');
         document.getElementById('qrContainer').classList.add('hidden');
-        // ensure cash field shows latest total
-        calculateTotal(); // updates cashReceived default
+        calculateTotal();
     }
 
-    // ----- Payment confirmation with modal -----
     function confirmPayment(method) {
         if (method === 'Cash') {
             const cashReceived = parseFloat(document.getElementById('cashReceived').value);
@@ -774,7 +1015,6 @@
         }
         pendingPaymentMethod = method;
 
-        // Set modal message
         const title = `Confirm ${method} Payment`;
         let msg = `Are you sure you want to mark this payment as complete via ${method}?`;
         if (method === 'Cash' && pendingCashAmount !== null) {
@@ -787,14 +1027,11 @@
         confirmModal.show();
     }
 
-    // Called when user confirms in the modal
     function executeCloseJob() {
-        // close any open modals
         const confirmModalEl = document.getElementById('confirmPaymentModal');
         const modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
         if (modalInstance) modalInstance.hide();
 
-        // proceed with job closure
         const method = pendingPaymentMethod;
         if (!method) return;
 
@@ -803,24 +1040,47 @@
             message = `Job closed via Cash (₹${pendingCashAmount} received).`;
         }
         showAlert(message + ' Status synced across apps.', 'Job Completed');
-        setTimeout(() => location.reload(), 1800);
+        // Stay in the app, do not reload
+        // Optionally reset to job list
+        setTimeout(() => {
+            showSection('jobListSection');
+        }, 1800);
     }
 
+    // Filter jobs on dashboard
+    function filterJobs() {
+        const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('#jobItems .job-card');
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name').toLowerCase();
+            const phone = card.getAttribute('data-phone').toLowerCase();
+            const booking = card.getAttribute('data-booking').toLowerCase();
+            const match = name.includes(searchTerm) || phone.includes(searchTerm) || booking.includes(searchTerm);
+            card.classList.toggle('hidden', !match);
+            if (match) visibleCount++;
+        });
+        document.getElementById('jobCount').innerText = visibleCount;
+    }
+
+    // Filter history by phone or booking ID
     function filterHistory() {
-        const val = document.getElementById('historySearch').value;
+        const val = document.getElementById('historySearch').value.toLowerCase();
         const items = document.querySelectorAll('#historyAccordion .accordion-item');
         items.forEach(item => {
-            const phone = item.getAttribute('data-phone');
-            item.classList.toggle('hidden', !phone.includes(val));
+            const phone = item.getAttribute('data-phone').toLowerCase();
+            const booking = item.getAttribute('data-booking').toLowerCase();
+            item.classList.toggle('hidden', !(phone.includes(val) || booking.includes(val)));
         });
     }
 
     window.onload = function() {
         updateProfileDisplay();
-        calculateTotal(); // initial totals
-        // Ensure active tab is set correctly (My Jobs active by default)
+        calculateTotal();
         document.getElementById('myJobsTab').classList.add('btn-light');
         document.getElementById('historyTab').classList.add('btn-outline-light');
+        filterJobs(); // initial count
+        initSpareCombobox(); // initialize the searchable dropdown
     };
 </script>
 </body>
