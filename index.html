@@ -216,6 +216,33 @@
         .spare-custom-group .btn {
             flex: 0 0 auto;
         }
+
+        /* Warranty section styles */
+        .warranty-section {
+            background: #f0f9ff;
+            border: 1px solid #b9e2ff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .warranty-badge {
+            background: #2b6c9e;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .warranty-date-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .warranty-date-group input {
+            flex: 1;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -394,9 +421,8 @@
             </div>
             <h6 class="fw-bold mb-3">Assigned Jobs (<span id="jobCount">2</span>)</h6>
             <div id="jobItems">
-                <!-- Added data attributes for search: name, phone, booking id, ro model -->
                 <div class="job-card d-flex align-items-center" tabindex="0" role="button"
-                     data-name="Mathika" data-phone="9840011223" data-booking="RHY001" data-ro="Kent Grand Plus"
+                     data-name="Mathika" data-phone="9840011223" data-booking="RHY001" data-ro="Kent Grand Plus" data-service="Installation"
                      onclick="viewJob('Mathika', '#404 QA Street', '9840011223', 'Installation', 'Open', 'RHY001', 'Kent Grand Plus')">
                     <div class="type-indicator" style="background: #6366f1;"></div>
                     <div class="flex-grow-1">
@@ -408,7 +434,7 @@
                     </div>
                 </div>
                 <div class="job-card d-flex align-items-center" tabindex="0" role="button"
-                     data-name="Rajesh" data-phone="9003055667" data-booking="RHY002" data-ro="AquaSure"
+                     data-name="Rajesh" data-phone="9003055667" data-booking="RHY002" data-ro="AquaSure" data-service="Service"
                      onclick="viewJob('Rajesh', '#12 Garden View', '9003055667', 'Service', 'In Process', 'RHY002', 'AquaSure')">
                     <div class="type-indicator" style="background: #ec4899;"></div>
                     <div class="flex-grow-1">
@@ -479,7 +505,7 @@
     </div>
 </div>
 
-<!-- JOB DETAIL (enhanced with booking id, ro model, hyperlinks) -->
+<!-- JOB DETAIL -->
 <div id="jobDetail" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobListSection')">
         <i class="bi bi-chevron-left"></i> Back to Jobs
@@ -509,7 +535,7 @@
     </div>
 </div>
 
-<!-- BILLING SECTION (enhanced with searchable dropdown + add new) -->
+<!-- BILLING SECTION with Warranty (only for Installation) -->
 <div id="billingSection" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('jobDetail')">
         <i class="bi bi-chevron-left"></i> Back
@@ -518,9 +544,9 @@
     <div class="card border-0 shadow-sm p-3 rounded-4">
         <div class="mb-2 small"><span class="fw-bold">Booking ID:</span> <span id="billBookingId">--</span></div>
         <div class="mb-3 small"><span class="fw-bold">RO Model:</span> <span id="billRoModel">--</span></div>
+        <div class="mb-3 small"><span class="fw-bold">Service Type:</span> <span id="billServiceType">--</span></div>
 
         <label class="small fw-bold mb-2">Spare Parts</label>
-        <!-- Custom group with searchable dropdown + add new -->
         <div class="spare-custom-group mb-3">
             <div class="spare-name-wrapper">
                 <input type="text" id="spareInput" class="form-control spare-name-input" placeholder="Type or select part..." autocomplete="off">
@@ -545,6 +571,24 @@
             <div class="d-flex justify-content-between fw-bold fs-5 text-primary"><span>Total:</span> <span id="grandTotal">₹0</span></div>
         </div>
 
+        <!-- WARRANTY SECTION - Only visible for Installation service type -->
+        <div id="warrantySection" class="warranty-section hidden">
+            <div class="warranty-badge">
+                <i class="bi bi-shield-check me-1"></i> Warranty Registration
+            </div>
+            <div class="warranty-date-group">
+                <div>
+                    <label class="small text-muted">Warranty From</label>
+                    <input type="date" id="warrantyFrom" class="form-control">
+                </div>
+                <div>
+                    <label class="small text-muted">Warranty To</label>
+                    <input type="date" id="warrantyTo" class="form-control">
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">2 years warranty for installation service</small>
+        </div>
+
         <!-- Comments -->
         <div class="mt-3">
             <label class="small fw-bold">Comments about completed work</label>
@@ -567,7 +611,7 @@
     </div>
 </div>
 
-<!-- PAYMENT SECTION (with actual QR code image) -->
+<!-- PAYMENT SECTION -->
 <div id="paymentSection" class="hidden container mt-3" style="max-width: 500px;">
     <button class="btn btn-link p-0 mb-3 text-decoration-none" onclick="showSection('billingSection')">
         <i class="bi bi-chevron-left"></i> Back to Billing
@@ -582,13 +626,11 @@
                 <i class="bi bi-cash d-block fs-3 mb-1"></i> Cash
             </button>
         </div>
-        <!-- QR container with actual QR code image (static for demo) -->
         <div id="qrContainer" class="hidden">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TechnicianKumar" class="img-fluid mb-3" style="width:150px; height:150px; border-radius:20px;" alt="QR Code">
             <p class="small text-muted">Scan to pay <b id="payAmt">₹0</b></p>
             <button class="btn btn-success w-100" onclick="confirmPayment('Online')">Payment Confirmed</button>
         </div>
-        <!-- Cash container -->
         <div id="cashConfirmContainer" class="hidden">
             <div class="mb-3">
                 <i class="bi bi-cash-stack fs-1 text-success"></i>
@@ -620,20 +662,21 @@
         address: '#123, 4th Cross, Bangalore'
     };
 
-    // Storage per job: key = phone number, value = { spares: [], discount: number, serviceFee: number, comments: string, beforePhoto: string, afterPhoto: string }
+    // Storage per job
     let jobData = {};
 
-    // Current job identifier (phone)
+    // Current job identifier (phone) and service type
     let currentJobPhone = null;
+    let currentServiceType = null;
 
-    // Local working array for the current job (synchronized with jobData)
+    // Local working array for the current job
     let addedSpares = [];
 
-    // payment method to be closed (set by confirmPayment)
+    // payment method to be closed
     let pendingPaymentMethod = null;
     let pendingCashAmount = null;
 
-    // ----- Searchable spare parts combobox -----
+    // Spare parts options
     let spareOptions = ["Sediment Filter", "Carbon Filter", "RO Membrane", "SMPS Adapter"];
 
     function initSpareCombobox() {
@@ -641,28 +684,24 @@
         const dropdown = document.getElementById('spareDropdown');
         if (!input || !dropdown) return;
 
-        // Show dropdown on focus
         input.addEventListener('focus', () => {
             renderSpareDropdown();
             dropdown.classList.add('show');
         });
 
-        // Filter as user types
         input.addEventListener('input', () => {
             renderSpareDropdown();
             dropdown.classList.add('show');
         });
 
-        // Hide dropdown when clicking outside (with delay to allow click on item)
         input.addEventListener('blur', () => {
             setTimeout(() => {
                 dropdown.classList.remove('show');
             }, 200);
         });
 
-        // Prevent dropdown from hiding when clicking inside it
         dropdown.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // keep focus on input
+            e.preventDefault();
         });
     }
 
@@ -671,12 +710,10 @@
         const dropdown = document.getElementById('spareDropdown');
         const query = input.value.trim().toLowerCase();
         let filtered = spareOptions.filter(opt => opt.toLowerCase().includes(query));
-        // Always show at most all options, but we can limit if desired
         let html = '';
         filtered.forEach(opt => {
             html += `<div class="spare-dropdown-item" onclick="selectSpareOption('${opt.replace(/'/g, "\\'")}')">${opt}</div>`;
         });
-        // If no match and query not empty, show "Add New" option
         if (query && !spareOptions.some(opt => opt.toLowerCase() === query)) {
             html += `<div class="spare-dropdown-item add-new" onclick="addNewSpareOption('${query.replace(/'/g, "\\'")}')">+ Add "${query}"</div>`;
         }
@@ -689,14 +726,12 @@
     }
 
     function addNewSpareOption(newOpt) {
-        // Add to spareOptions if not already present
         if (!spareOptions.includes(newOpt)) {
             spareOptions.push(newOpt);
         }
         selectSpareOption(newOpt);
     }
 
-    // Update addSpare to possibly add new spare to options (if user typed a new one)
     function addSpare() {
         const nameInp = document.getElementById('spareInput');
         const priceInp = document.getElementById('tempPrice');
@@ -705,7 +740,6 @@
 
         if(!name) return;
 
-        // If name is not in spareOptions, add it (so it appears in future suggestions)
         if (!spareOptions.includes(name)) {
             spareOptions.push(name);
         }
@@ -718,13 +752,9 @@
         nameInp.focus();
     }
 
-    // ----- end combobox -----
-
     function toggleAuth(showSignup) {
         document.getElementById('loginCard').classList.toggle('hidden', showSignup);
         document.getElementById('signupCard').classList.toggle('hidden', !showSignup);
-        if (showSignup) document.getElementById('regName')?.focus();
-        else document.querySelector('#loginCard input')?.focus();
     }
 
     function handleSignup() {
@@ -759,12 +789,7 @@
         const newAddr = document.getElementById('profileAddress').value.trim();
 
         if (!newName || !newPhone) {
-            const profileModalEl = document.getElementById('profileModal');
-            const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
-            if (modalInstance) modalInstance.hide();
-            setTimeout(() => {
-                showAlert('Name and phone are required', 'Cannot save');
-            }, 200);
+            showAlert('Name and phone are required', 'Cannot save');
             return;
         }
 
@@ -776,12 +801,10 @@
         const profileModalEl = document.getElementById('profileModal');
         const modalInstance = bootstrap.Modal.getInstance(profileModalEl);
         if (modalInstance) modalInstance.hide();
-
         showAlert('Profile updated', 'Success');
     }
 
     function logout() {
-        // Simply hide dashboard and show auth (no reload)
         bootstrap.Modal.getInstance(document.getElementById('logoutModal')).hide();
         document.getElementById('dashboard').classList.add('hidden');
         document.getElementById('authSection').classList.remove('hidden');
@@ -825,19 +848,15 @@
         }
     }
 
-    // Enhanced viewJob with bookingId and roModel
     function viewJob(name, addr, phone, service, status, bookingId, roModel) {
         showSection('jobDetail');
         document.getElementById('detName').innerText = name;
-        document.getElementById('detAddr').innerText = addr;
-        document.getElementById('detPhone').innerText = phone;
         document.getElementById('detService').innerText = service;
         document.getElementById('detStatus').innerText = status;
         document.getElementById('detStatus').className = `status-pill status-${status.toLowerCase().replace(' ', '')}`;
         document.getElementById('detBookingId').innerText = bookingId || '--';
         document.getElementById('detRoModel').innerText = roModel || '--';
 
-        // Create tel: and maps links
         document.getElementById('detPhoneLink').href = `tel:${phone}`;
         document.getElementById('detPhoneLink').innerText = phone;
         document.getElementById('detAddrLink').href = `https://maps.google.com/?q=${encodeURIComponent(addr)}`;
@@ -847,8 +866,10 @@
         document.getElementById('billBtn').classList.toggle('hidden', status !== 'In Process');
 
         currentJobPhone = phone;
+        currentServiceType = service;
+        
         if (!jobData[currentJobPhone]) {
-            jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null };
+            jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null, warrantyFrom: null, warrantyTo: null };
         }
         addedSpares = [...jobData[currentJobPhone].spares];
     }
@@ -858,27 +879,47 @@
         document.getElementById('detStatus').className = `status-pill status-process`;
         document.getElementById('startBtn').classList.add('hidden');
         document.getElementById('billBtn').classList.remove('hidden');
-        setTimeout(() => document.getElementById('billBtn').focus(), 100);
     }
 
     function showBilling() {
         showSection('billingSection');
+        
+        document.getElementById('billBookingId').innerText = document.getElementById('detBookingId').innerText;
+        document.getElementById('billRoModel').innerText = document.getElementById('detRoModel').innerText;
+        document.getElementById('billServiceType').innerText = currentServiceType || '--';
+        
+        // Show/hide warranty section based on service type
+        const warrantySection = document.getElementById('warrantySection');
+        if (currentServiceType === 'Installation') {
+            warrantySection.classList.remove('hidden');
+            // Restore warranty dates if they exist
+            if (jobData[currentJobPhone] && jobData[currentJobPhone].warrantyFrom) {
+                document.getElementById('warrantyFrom').value = jobData[currentJobPhone].warrantyFrom;
+                document.getElementById('warrantyTo').value = jobData[currentJobPhone].warrantyTo;
+            } else {
+                // Auto-set default warranty: from today, to 2 years from today
+                const today = new Date();
+                const twoYearsLater = new Date(today);
+                twoYearsLater.setFullYear(today.getFullYear() + 2);
+                document.getElementById('warrantyFrom').value = today.toISOString().slice(0,10);
+                document.getElementById('warrantyTo').value = twoYearsLater.toISOString().slice(0,10);
+            }
+        } else {
+            warrantySection.classList.add('hidden');
+        }
+        
         if (currentJobPhone && jobData[currentJobPhone]) {
             addedSpares = [...jobData[currentJobPhone].spares];
             document.getElementById('discountInp').value = jobData[currentJobPhone].discount || 0;
             document.getElementById('serviceFee').value = jobData[currentJobPhone].serviceFee || 0;
             document.getElementById('workComments').value = jobData[currentJobPhone].comments || '';
-            // Restore photos
-            document.getElementById('photoPreview').innerHTML = ''; // clear
+            document.getElementById('photoPreview').innerHTML = '';
             if (jobData[currentJobPhone].beforePhoto) {
                 addPhotoPreview('before', jobData[currentJobPhone].beforePhoto);
             }
             if (jobData[currentJobPhone].afterPhoto) {
                 addPhotoPreview('after', jobData[currentJobPhone].afterPhoto);
             }
-            // Set booking and ro model from jobDetail
-            document.getElementById('billBookingId').innerText = document.getElementById('detBookingId').innerText;
-            document.getElementById('billRoModel').innerText = document.getElementById('detRoModel').innerText;
         } else {
             addedSpares = [];
             document.getElementById('discountInp').value = 0;
@@ -888,18 +929,23 @@
         }
         renderSpares();
         calculateTotal();
-        setTimeout(() => document.getElementById('spareInput')?.focus(), 150);
     }
 
     function syncJobData() {
         if (currentJobPhone) {
             if (!jobData[currentJobPhone]) {
-                jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null };
+                jobData[currentJobPhone] = { spares: [], discount: 0, serviceFee: 0, comments: '', beforePhoto: null, afterPhoto: null, warrantyFrom: null, warrantyTo: null };
             }
             jobData[currentJobPhone].spares = [...addedSpares];
             jobData[currentJobPhone].discount = parseInt(document.getElementById('discountInp').value) || 0;
             jobData[currentJobPhone].serviceFee = parseInt(document.getElementById('serviceFee').value) || 0;
             jobData[currentJobPhone].comments = document.getElementById('workComments').value;
+            
+            // Save warranty dates if installation service
+            if (currentServiceType === 'Installation') {
+                jobData[currentJobPhone].warrantyFrom = document.getElementById('warrantyFrom').value;
+                jobData[currentJobPhone].warrantyTo = document.getElementById('warrantyTo').value;
+            }
         }
     }
 
@@ -907,8 +953,6 @@
         syncJobData();
         calculateTotal();
     }
-
-    // addSpare is now defined above (replaces old version)
 
     function renderSpares() {
         const list = document.getElementById('spareList');
@@ -949,7 +993,6 @@
         syncJobData();
     }
 
-    // Photo handling
     function uploadPhoto(type) {
         document.getElementById(type + 'Photo').click();
     }
@@ -969,7 +1012,6 @@
 
     function addPhotoPreview(type, src) {
         const container = document.getElementById('photoPreview');
-        // Remove existing preview of same type if any
         const existing = document.querySelector(`.photo-preview img[data-type="${type}"]`);
         if (existing) existing.remove();
         const img = document.createElement('img');
@@ -979,8 +1021,8 @@
         container.appendChild(img);
     }
 
-    // Bill confirmation
     function confirmSendBill() {
+        syncJobData();
         const modal = new bootstrap.Modal(document.getElementById('confirmBillModal'));
         modal.show();
     }
@@ -1039,15 +1081,19 @@
         if (method === 'Cash' && pendingCashAmount !== null) {
             message = `Job closed via Cash (₹${pendingCashAmount} received).`;
         }
-        showAlert(message + ' Status synced across apps.', 'Job Completed');
-        // Stay in the app, do not reload
-        // Optionally reset to job list
+        
+        // If installation service with warranty, show warranty details in success message
+        if (currentServiceType === 'Installation' && jobData[currentJobPhone] && jobData[currentJobPhone].warrantyFrom) {
+            message += ` Warranty registered from ${jobData[currentJobPhone].warrantyFrom} to ${jobData[currentJobPhone].warrantyTo}.`;
+        }
+        
+        showAlert(message, 'Job Completed');
+        
         setTimeout(() => {
             showSection('jobListSection');
         }, 1800);
     }
 
-    // Filter jobs on dashboard
     function filterJobs() {
         const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
         const cards = document.querySelectorAll('#jobItems .job-card');
@@ -1063,7 +1109,6 @@
         document.getElementById('jobCount').innerText = visibleCount;
     }
 
-    // Filter history by phone or booking ID
     function filterHistory() {
         const val = document.getElementById('historySearch').value.toLowerCase();
         const items = document.querySelectorAll('#historyAccordion .accordion-item');
@@ -1079,8 +1124,8 @@
         calculateTotal();
         document.getElementById('myJobsTab').classList.add('btn-light');
         document.getElementById('historyTab').classList.add('btn-outline-light');
-        filterJobs(); // initial count
-        initSpareCombobox(); // initialize the searchable dropdown
+        filterJobs();
+        initSpareCombobox();
     };
 </script>
 </body>
